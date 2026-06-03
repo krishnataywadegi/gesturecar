@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>WiFi Car</title>
+
+<style>
+
+body{
+text-align:center;
+font-family:Arial;
+background:#f2f2f2;
+}
+
+button{
+width:120px;
+height:60px;
+font-size:22px;
+margin:5px;
+}
+
+#joystick{
+width:220px;
+height:220px;
+border-radius:50%;
+background:#ccc;
+position:relative;
+margin:auto;
+touch-action:none;
+}
+
+#stick{
+width:80px;
+height:80px;
+background:black;
+border-radius:50%;
+position:absolute;
+left:70px;
+top:70px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>WiFi Car Controller</h2>
+
+<h3>Buttons</h3>
+
+<button onclick="send('F')">Forward</button>
+<br>
+
+<button onclick="send('L')">Left</button>
+
+<button onclick="send('S')">Stop</button>
+
+<button onclick="send('R')">Right</button>
+
+<br>
+
+<button onclick="send('B')">Backward</button>
+
+<hr>
+
+<h3>Joystick</h3>
+
+<div id="joystick">
+
+<div id="stick"></div>
+
+</div>
+
+<hr>
+
+<h3>Hand Gesture</h3>
+
+<button onclick="gestureOn()">Enable Gesture</button>
+
+<p id="status">Gesture OFF</p>
+
+<script>
+
+function send(cmd){
+
+fetch("http://192.168.4.1/control?cmd="+cmd)
+.catch(()=>{});
+
+}
+
+const joystick=document.getElementById("joystick");
+const stick=document.getElementById("stick");
+
+let centerX=110;
+let centerY=110;
+
+joystick.addEventListener("touchmove",function(e){
+
+e.preventDefault();
+
+let touch=e.touches[0];
+
+let rect=joystick.getBoundingClientRect();
+
+let x=touch.clientX-rect.left;
+let y=touch.clientY-rect.top;
+
+stick.style.left=(x-40)+"px";
+stick.style.top=(y-40)+"px";
+
+let dx=x-centerX;
+let dy=y-centerY;
+
+if(Math.abs(dx)>Math.abs(dy)){
+
+if(dx>40)
+send("R");
+
+else if(dx<-40)
+send("L");
+
+}else{
+
+if(dy<-40)
+send("F");
+
+else if(dy>40)
+send("B");
+
+}
+
+});
+
+joystick.addEventListener("touchend",function(){
+
+stick.style.left="70px";
+stick.style.top="70px";
+
+send("S");
+
+});
+
+function gestureOn(){
+
+document.getElementById("status").innerHTML="Gesture ON";
+
+window.addEventListener("deviceorientation",function(event){
+
+let x=event.gamma;
+let y=event.beta;
+
+if(y<-20)
+send("F");
+
+else if(y>20)
+send("B");
+
+else if(x<-20)
+send("L");
+
+else if(x>20)
+send("R");
+
+else
+send("S");
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
